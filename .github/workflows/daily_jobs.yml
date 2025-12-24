@@ -21,8 +21,9 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Create Google credentials file
-      run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > google_credentials.json
-
     - name: Run job search
       run: python search_jobs.py
+      env:
+        EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}

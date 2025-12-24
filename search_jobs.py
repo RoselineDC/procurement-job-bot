@@ -15,6 +15,17 @@ EMAIL_FROM = os.environ["EMAIL_FROM"]
 EMAIL_TO = os.environ["EMAIL_TO"]
 EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
 
+# TEST
+msg = MIMEText("✅ Test email from GitHub Actions is working.")
+msg["Subject"] = "TEST: GitHub Email Bot"
+msg["From"] = EMAIL_FROM
+msg["To"] = EMAIL_TO
+
+with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    server.login(EMAIL_FROM, EMAIL_PASSWORD)
+    server.send_message(msg)
+
+print("Email sent successfully")
 
 # ---------------- SCRAPE JOBS ----------------
 def scrape_jobs():

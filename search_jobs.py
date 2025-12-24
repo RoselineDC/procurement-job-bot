@@ -1,41 +1,28 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-from datetime import datetime
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from datetime import date
 import smtplib
 from email.mime.text import MIMEText
+import os
 
-# ---------- CONFIG ----------
+# ---------------- CONFIG ----------------
 SEARCH_URL = "https://za.indeed.com/jobs?q=procurement+tender+administrator&l=South+Africa"
-MAX_JOBS = 5
+MAX_JOBS = 15
 
-EMAIL_FROM = "your_email@gmail.com"
-EMAIL_TO = "your_email@gmail.com"
-EMAIL_PASSWORD = "YOUR_APP_PASSWORD"
 
-GOOGLE_SHEET_NAME = "Daily Tender & Procurement Jobs"
 
-# ---------- GOOGLE SHEETS ----------
-def connect_sheet():
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        "google_credentials.json", scope
-    )
-    client = gspread.authorize(creds)
-    return client.open(GOOGLE_SHEET_NAME).sheet1
+EMAIL_FROM = os.environ["EMAIL_FROM"]
+EMAIL_TO = os.environ["EMAIL_TO"]
+EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
 
-# ---------- JOB SCRAPER ----------
+
+# ---------------- SCRAPE JOBS ----------------
 def scrape_jobs():
     headers = {"User-Agent": "Mozilla/5.0"}
     response = requests.get(SEARCH_URL, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    jobs = []
+    rows = []
 
     for job in soup.select(".job_seen_beacon")[:MAX_JOBS]:
         title = job.select_one("h2").text.strip()
@@ -51,8 +38,8 @@ def scrape_jobs():
             "deadline management"
         ]
 
-        jobs.append([
-            datetime.today().strftime("%Y-%m-%d"),
+        rows.append([
+            str(date.today()),
             title,
             company,
             location,
@@ -61,13 +48,19 @@ def scrape_jobs():
             *keywords
         ])
 
-    return jobs
+    return rows
 
-# ---------- EMAIL ----------
-def send_email(df):
-    html = df.to_html(index=False)
-    msg = MIMEText(html, "html")
-    msg["Subject"] = f"Daily Procurement & Tender Jobs – {datetime.today().date()}"
+# ---------------- SEND EMAIL ----------------
+def send_email(rows):
+    header = (
+        "Date | Job Title | Company | Location | Experience | Link | "
+        "Keyword1 | Keyword2 | Keyword3 | Keyword4 | Keyword5\n"
+    )
+
+    body = header + "\n".join([" | ".join(row) for row in rows])
+
+    msg = MIMEText(body)
+    msg["Subject"] = f"Daily Procurement & Tender Jobs – {date.today()}"
     msg["From"] = EMAIL_FROM
     msg["To"] = EMAIL_TO
 
@@ -75,29 +68,11 @@ def send_email(df):
         server.login(EMAIL_FROM, EMAIL_PASSWORD)
         server.send_message(msg)
 
-# ---------- MAIN ----------
+# ---------------- MAIN ----------------
 def main():
-    sheet = connect_sheet()
-    jobs = scrape_jobs()
-
-    df = pd.DataFrame(jobs, columns=[
-        "Date",
-        "Job Title",
-        "Company",
-        "Location",
-        "Experience",
-        "Link",
-        "Keyword 1",
-        "Keyword 2",
-        "Keyword 3",
-        "Keyword 4",
-        "Keyword 5"
-    ])
-
-    for row in jobs:
-        sheet.append_row(row)
-
-    send_email(df)
+    rows = scrape_jobs()
+    if rows:
+        send_email(rows)
 
 if __name__ == "__main__":
     main()

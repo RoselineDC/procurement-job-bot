@@ -21,7 +21,7 @@ msg["Subject"] = "TEST: GitHub Email Bot"
 msg["From"] = EMAIL_FROM
 msg["To"] = EMAIL_TO
 
-with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+with smtplib.SMTP_SSL("smtp.yahoo.com", 465) as server:
     server.login(EMAIL_FROM, EMAIL_PASSWORD)
     server.send_message(msg)
 
@@ -75,7 +75,7 @@ def send_email(rows):
     msg["From"] = EMAIL_FROM
     msg["To"] = EMAIL_TO
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP_SSL("smtp.yahoo.com", 465) as server:
         server.login(EMAIL_FROM, EMAIL_PASSWORD)
         server.send_message(msg)
 

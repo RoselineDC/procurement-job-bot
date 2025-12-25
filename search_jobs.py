@@ -20,9 +20,10 @@ msg["Subject"] = "Test Yahoo Email"
 msg["From"] = EMAIL_FROM
 msg["To"] = EMAIL_TO
 
-with smtplib.SMTP_SSL("smtp.yahoo.com", 465) as server:
+with smtplib.SMTP_SSL("smtp.mail.yahoo.com", 465) as server:
     server.login(EMAIL_FROM, EMAIL_PASSWORD)
     server.send_message(msg)
+
 
 print("Yahoo email sent successfully!")
 
